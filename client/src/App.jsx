@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import './App.css'
-import SignUp from './components/SignUp/Auth'
+import SignUp from './components/Auth'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -8,6 +8,7 @@ function App() {
   return (
     <> 
       <SignUp/>
+      <div class="text-3xl font-bold ">Hello?</div>
     </>
   )
 }
