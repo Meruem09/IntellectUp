@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import './App.css'
 import SignUp from './components/Auth'
+import Form from './components/Form'
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <> 
-      <SignUp/>
-      <div class="text-3xl font-bold ">Hello?</div>
+      <Form/>
     </>
   )
 }
