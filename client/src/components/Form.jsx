@@ -1,6 +1,7 @@
 import { useSignUp, useSignIn  } from "@clerk/clerk-react";
 import { useClerk } from "@clerk/clerk-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Form = () => {
   const { signUp, isLoaded } = useSignUp();
@@ -12,6 +13,11 @@ const Form = () => {
 
   const [verificationCode, setVerificationCode] = useState("");
   const [showVerification, setShowVerification] = useState(false);
+
+  const navigate_to = useNavigate();
+  const handleSignIn = () => {
+    navigate_to('/signIn');
+  }
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -143,7 +149,7 @@ const Form = () => {
         </div>
 
         <div className="mt-6 text-center text-sm text-gray-400">
-          Already have an account? <a href="/sign-in" className="text-blue-400 hover:underline">Sign In</a>
+          Already have an account? <a onClick={handleSignIn} className="text-blue-400 hover:underline cursor-pointer">Sign In</a>
         </div>
       </div>
     </div>

@@ -1,11 +1,18 @@
 import { useState } from "react";
 import { useSignIn } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
 
 const SignIn = () => {
   const { signIn, setActive } = useSignIn();
   const [emailAddress, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+
+  const navigate_to = useNavigate();
+  const handleSignUp = () => {
+    navigate_to('/');
+  }
 
   const handleSignIn = async (e) => {
     e.preventDefault();
@@ -78,7 +85,7 @@ const SignIn = () => {
         </div>
 
         <div className="mt-6 text-center text-sm text-gray-400">
-          Don’t have an account? <a href="/sign-up" className="text-blue-400 hover:underline">Sign Up</a>
+          Don’t have an account? <a onClick={handleSignUp} className="text-blue-400 cursor-pointer hover:underline">Sign Up</a>
         </div>
       </div>
     </div>
