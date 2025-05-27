@@ -1,11 +1,12 @@
 import { useSignUp, useSignIn  } from "@clerk/clerk-react";
-import { useClerk } from "@clerk/clerk-react";
+import { useClerk, useAuth } from "@clerk/clerk-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Form = () => {
   const { signUp, isLoaded } = useSignUp();
   const { signOut } = useClerk();
+  const { isSignedIn } = useAuth(); 
   const { signIn } = useSignIn();
   const [username, setUsername] = useState("");
   const [emailAddress, setEmail] = useState("");
@@ -17,6 +18,14 @@ const Form = () => {
   const navigate_to = useNavigate();
   const handleSignIn = () => {
     navigate_to('/signIn');
+  }
+
+  const handleMain = () => {
+    navigate_to('/main');
+  }
+
+  if(isSignedIn){
+    handleMain();
   }
 
   const handleSignUp = async (e) => {
@@ -52,6 +61,7 @@ const Form = () => {
 
       if (result.status === "complete") {
         alert("Signup successful! You can now sign in.")
+        handleSignIn();
       }
     } catch (err) {
       console.error("Verification error:", err);

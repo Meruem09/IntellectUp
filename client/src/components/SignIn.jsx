@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSignIn } from "@clerk/clerk-react";
+import { useSignIn, useClerk } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 
 const SignIn = () => {
@@ -7,16 +7,22 @@ const SignIn = () => {
   const [emailAddress, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const { signOut } = useClerk();
 
 
   const navigate_to = useNavigate();
   const handleSignUp = () => {
     navigate_to('/');
   }
+  const handleMain = () => {
+    navigate_to('/main');
+  }
 
   const handleSignIn = async (e) => {
     e.preventDefault();
     try {
+
+      await signOut();
       const result = await signIn.create({
         identifier: emailAddress,
         password,
@@ -25,6 +31,7 @@ const SignIn = () => {
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
         alert("Signed in successfully!");
+        handleMain();
         // Redirect if needed, e.g., navigate("/dashboard")
       }
     } catch (err) {
