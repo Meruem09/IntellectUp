@@ -5,18 +5,26 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 // Create a new chat for a user
-router.post('/', async (req, res) => {
-  const { userId } = req.body;
+router.post('/chats', async (req, res) => {
+  const clerkUserId = req.auth.userId;
+
+  if (!clerkUserId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   try {
+    const user = await findOrCreateUser(clerkUserId);
+
     const newChat = await prisma.chat.create({
       data: {
-        userId: userId,
+        userId: user.id, // 🔗 link to our DB user
       },
     });
+
     res.status(201).json(newChat);
   } catch (error) {
     console.error(error);
-    res.status(400).json({ error: 'Failed to create chat' });
+    res.status(500).json({ error: 'Failed to create chat' });
   }
 });
 

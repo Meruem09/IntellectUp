@@ -1,86 +1,252 @@
-import { useSignUp, useSignIn  } from "@clerk/clerk-react";
-import { useClerk, useAuth } from "@clerk/clerk-react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useSignUp, useSignIn } from "@clerk/clerk-react"
+import { useClerk, useAuth, useUser } from "@clerk/clerk-react"
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+
+
 
 const Form = () => {
-  const { signUp, isLoaded } = useSignUp();
-  const { signOut } = useClerk();
-  const { isSignedIn } = useAuth(); 
-  const { signIn } = useSignIn();
-  const [username, setUsername] = useState("");
-  const [emailAddress, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { signUp, isLoaded } = useSignUp()
+  const { signOut, session } = useClerk()
+  const { setActive } = useClerk()
+  const { isSignedIn, getToken, userId } = useAuth()
+  const { user } = useUser()
+  const { signIn } = useSignIn()
 
-  const [verificationCode, setVerificationCode] = useState("");
-  const [showVerification, setShowVerification] = useState(false);
+  const [username, setUsername] = useState("")
+  const [emailAddress, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [verificationCode, setVerificationCode] = useState("")
+  const [showVerification, setShowVerification] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [debugInfo, setDebugInfo] = useState({})
 
-  const navigate_to = useNavigate();
+  const navigate_to = useNavigate()
+
+  // Debug: Log auth state changes
+  useEffect(() => {
+    const authState = { 
+      isSignedIn, 
+      userId, 
+      hasUser: !!user,
+      hasSession: !!session
+    }
+    console.log("Auth state:", authState)
+    setDebugInfo(authState)
+  }, [isSignedIn, userId, user, session])
+
   const handleSignIn = () => {
-    navigate_to('/signIn');
+    navigate_to("/signIn")
   }
 
   const handleMain = () => {
-    navigate_to('/main');
+    navigate_to("/main")
   }
 
-  if(isSignedIn){
-    handleMain();
+  const handleOnboard = () => {
+    navigate_to("/board")
+  }
+
+  const validateForm = () => {
+    if (!username.trim()) {
+      alert("Username is required")
+      return false
+    }
+    if (!emailAddress.trim()) {
+      alert("Email is required")
+      return false
+    }
+    if (!password.trim()) {
+      alert("Password is required")
+      return false
+    }
+    if (password.length < 8) {
+      alert("Password must be at least 8 characters long")
+      return false
+    }
+    return true
   }
 
   const handleSignUp = async (e) => {
-    e.preventDefault();
-    if (!isLoaded) return;
+    e.preventDefault()
+    if (!isLoaded || !validateForm()) return
 
+    setIsLoading(true)
     try {
-      await signOut();
+      // Sign out any existing session
+      await signOut()
 
       await signUp.create({
         emailAddress,
         password,
-      });
+      })
 
       await signUp.prepareEmailAddressVerification({
         strategy: "email_code",
-      });
-      setShowVerification(true);
+      })
+
+      setShowVerification(true)
       alert("Verification code sent to your email.")
     } catch (err) {
-      console.error("SignUp error:", err);
-      alert(err.errors?.[0]?.message || "Signup failed");
+      console.error("SignUp error:", err)
+      alert(err.errors?.[0]?.message || "Signup failed")
+    } finally {
+      setIsLoading(false)
     }
-  };
+  }
+
+  const waitForSession = async (maxAttempts = 15, delay = 1000) => {
+    for (let i = 0; i < maxAttempts; i++) {
+      console.log(`Session check attempt ${i + 1}/${maxAttempts}`)
+
+      // Check if we have a valid session
+      if (isSignedIn && userId) {
+        try {
+          // This is the key fix - we need to specify the session token type
+          const token = await getToken({ template: "default" })
+          console.log(token);
+
+          if (token) {
+            console.log("Session established successfully")
+            return { token, userId }
+          }
+        } catch (error) {
+          console.warn(`Token retrieval failed on attempt ${i + 1}:`, error)
+        }
+      }
+
+      if (i < maxAttempts - 1) {
+        console.log(`Waiting ${delay}ms before next attempt...`)
+        await new Promise((resolve) => setTimeout(resolve, delay))
+      }
+    }
+
+    throw new Error("Session not established after maximum attempts")
+  }
+
+  const createUserInDatabase = async (token, clerkId, userData) => {
+    console.log("Creating user in database with:", { clerkId, userData })
+    console.log("Token (first 20 chars):", token.substring(0, 20) + "...")
+
+    const response = await fetch("http://localhost:3001/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // This is the key fix - the token must be sent as a Bearer token
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        clerkId,
+        username: userData.username.trim(),
+        email: userData.email.trim(),
+      }),
+      credentials: 'include', // Include cookies if any
+    })
+
+    console.log("Database response status:", response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error("Database error response:", errorText)
+
+      let errorData
+      try {
+        errorData = JSON.parse(errorText)
+      } catch {
+        errorData = { message: errorText }
+      }
+
+      throw new Error(errorData.error || errorData.message || `Server error: ${response.status}`)
+    }
+
+    const result = await response.json()
+    console.log("User created successfully:", result)
+    return result
+  }
 
   const handleVerify = async () => {
-    if (!isLoaded) return;
+    if (!isLoaded || !verificationCode.trim()) {
+      alert("Please enter the verification code")
+      return
+    }
 
+    setIsVerifying(true)
     try {
+      console.log("Starting email verification...")
+
       const result = await signUp.attemptEmailAddressVerification({
         code: verificationCode,
-      });
+      })
+
+      console.log("Verification result:", result)
 
       if (result.status === "complete") {
-        alert("Signup successful! You can now sign in.")
-        handleSignIn();
+        console.log("Email verification complete, waiting for session...")
+        
+        // Force a complete sign-in to ensure the session is properly established
+        if (result.createdSessionId) {
+          await setActive({ session: result.createdSessionId })
+        }
+
+        // Wait for the session to be fully established
+        const { token, userId: sessionUserId } = await waitForSession()
+
+        const clerkId = sessionUserId || result.createdUserId || signUp.createdUserId
+
+        if (!clerkId) {
+          throw new Error("No user ID found after verification")
+        }
+
+        console.log("Session established, creating user in database with ID:", clerkId)
+
+        // Create user in your database
+        await createUserInDatabase(token, clerkId, {
+          username,
+          email: emailAddress,
+        })
+
+        alert("Signup successful!")
+        handleOnboard()
+      } else {
+        console.error("Verification incomplete:", result)
+        alert("Verification incomplete. Please try again.")
       }
     } catch (err) {
-      console.error("Verification error:", err);
-      alert(err.errors?.[0]?.message || "Invalid verification code");
+      console.error("Verification error:", err)
+
+      if (err.message.includes("Session not established")) {
+        alert("There was an issue establishing your session. Please try signing in manually.")
+        navigate_to("/signIn")
+      } else if (err.errors && err.errors.length > 0) {
+        alert(err.errors[0].message)
+      } else if (err.message) {
+        alert(err.message)
+      } else {
+        alert("Verification failed. Please try again.")
+      }
+    } finally {
+      setIsVerifying(false)
     }
-  };
+  }
 
   const handleOAuth = async (provider) => {
     try {
-      await signOut();
+      await signOut()
+
+      // Use environment-based redirect URLs or fallback to current origin
+      const baseUrl = window.location.origin
+
       await signIn.authenticateWithRedirect({
         strategy: provider,
-        redirectUrl: '/sso-callback',
-        redirectUrlComplete: '/',
-      });
+        redirectUrl: `${baseUrl}/sso-callback`,
+        redirectUrlComplete: `${baseUrl}/board`,
+      })
     } catch (err) {
-      alert(err.errors?.[0]?.message || 'OAuth failed.');
+      console.error("OAuth error:", err)
+      alert(err.errors?.[0]?.message || "OAuth authentication failed.")
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-white px-4">
@@ -90,80 +256,133 @@ const Form = () => {
 
         <form onSubmit={handleSignUp} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Username</label>
+            <label className="block text-sm font-medium mb-1">
+              Username <span className="text-red-400">*</span>
+            </label>
             <input
               type="text"
               placeholder="Tyler"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-950 text-white rounded-lg border border-gray-600 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={isLoading || showVerification}
+              className="w-full px-4 py-2 bg-gray-950 text-white rounded-lg border border-gray-600 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Email address</label>
+            <label className="block text-sm font-medium mb-1">
+              Email address <span className="text-red-400">*</span>
+            </label>
             <input
               type="email"
               placeholder="username@gmail.com"
               value={emailAddress}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-950 text-white rounded-lg border border-gray-600 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={isLoading || showVerification}
+              className="w-full px-4 py-2 bg-gray-950 text-white rounded-lg border border-gray-600 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Password</label>
+            <label className="block text-sm font-medium mb-1">
+              Password <span className="text-red-400">*</span>
+            </label>
             <input
               type="password"
               placeholder="********"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-950 text-white rounded-lg border border-gray-600 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={isLoading || showVerification}
+              className="w-full px-4 py-2 bg-gray-950 text-white rounded-lg border border-gray-600 hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              required
+              minLength={8}
             />
+            <p className="text-xs text-gray-400 mt-1">Minimum 8 characters</p>
           </div>
 
           {showVerification && (
             <div>
-              <label className="block text-sm font-medium mb-1">Enter Verification Code</label>
+              <label className="block text-sm font-medium mb-1">
+                Enter Verification Code <span className="text-red-400">*</span>
+              </label>
               <input
                 type="text"
                 placeholder="123456"
                 value={verificationCode}
                 onChange={(e) => setVerificationCode(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-950 text-white rounded-lg border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                disabled={isVerifying}
+                className="w-full px-4 py-2 bg-gray-950 text-white rounded-lg border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-50"
+                required
               />
               <button
                 type="button"
                 onClick={handleVerify}
-                className="w-full mt-3 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors"
+                disabled={isVerifying || !verificationCode.trim()}
+                className="w-full mt-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-2 rounded-lg transition-colors"
               >
-                Verify Email
+                {isVerifying ? "Verifying..." : "Verify Email"}
               </button>
+              
+              {/* Debug info */}
+              {isVerifying && (
+                <div className="mt-3 p-2 bg-gray-800 rounded text-xs">
+                  <p>Auth state: {JSON.stringify(debugInfo)}</p>
+                </div>
+              )}
             </div>
           )}
 
           {!showVerification && (
-            <button
-              type="submit"
-              className="w-full mt-4 bg-gray-950 hover:bg-blue-900 border border-gray-600 transition-colors text-white font-semibold py-2 rounded-lg"
-            >
-              Sign Up →
-            </button>
+            <>
+              <div id="clerk-captcha" />
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full mt-4 bg-gray-950 hover:bg-blue-900 disabled:bg-gray-700 disabled:cursor-not-allowed border border-gray-600 transition-colors text-white font-semibold py-2 rounded-lg"
+              >
+                {isLoading ? "Creating Account..." : "Sign Up →"}
+              </button>
+            </>
           )}
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-400">Or sign up with</div>
-        <div className="flex space-x-3 mt-4">
-          <button onClick={() => handleOAuth("oauth_github")} className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded-lg text-white">GitHub</button>
-          <button onClick={() => handleOAuth("oauth_google")} className="flex-1 bg-red-600 hover:bg-red-500 py-2 rounded-lg text-white">Google</button>
-        </div>
+        {!showVerification && (
+          <>
+            <div className="mt-6 text-center text-sm text-gray-400">Or sign up with</div>
+            <div className="flex space-x-3 mt-4">
+              <button
+                onClick={() => handleOAuth("oauth_github")}
+                disabled={isLoading}
+                className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed py-2 rounded-lg text-white transition-colors"
+              >
+                GitHub
+              </button>
+              <button
+                onClick={() => handleOAuth("oauth_google")}
+                disabled={isLoading}
+                className="flex-1 bg-red-600 hover:bg-red-500 disabled:bg-red-800 disabled:cursor-not-allowed py-2 rounded-lg text-white transition-colors"
+              >
+                Google
+              </button>
+            </div>
+          </>
+        )}
 
         <div className="mt-6 text-center text-sm text-gray-400">
-          Already have an account? <a onClick={handleSignIn} className="text-blue-400 hover:underline cursor-pointer">Sign In</a>
+          Already have an account?{" "}
+          <button
+            onClick={handleSignIn}
+            className="text-blue-400 hover:underline cursor-pointer"
+            disabled={isLoading || isVerifying}
+          >
+            Sign In
+          </button>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Form;
+export default Form
