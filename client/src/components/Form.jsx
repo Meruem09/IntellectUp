@@ -1,5 +1,5 @@
 import { useSignUp, useSignIn } from "@clerk/clerk-react"
-import { useClerk, useAuth, useUser } from "@clerk/clerk-react"
+import { useClerk, useAuth, useUser, useSession } from "@clerk/clerk-react"
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 
@@ -7,7 +7,8 @@ import { useNavigate } from "react-router-dom"
 
 const Form = () => {
   const { signUp, isLoaded } = useSignUp()
-  const { signOut, session } = useClerk()
+  const { signOut } = useClerk()
+  const { session } = useSession()
   const { setActive } = useClerk()
   const { isSignedIn, getToken, userId } = useAuth()
   const { user } = useUser()
@@ -165,70 +166,62 @@ const Form = () => {
     return result
   }
 
-  const handleVerify = async () => {
-    if (!isLoaded || !verificationCode.trim()) {
-      alert("Please enter the verification code")
-      return
-    }
-
-    setIsVerifying(true)
-    try {
-      console.log("Starting email verification...")
-
-      const result = await signUp.attemptEmailAddressVerification({
-        code: verificationCode,
-      })
-
-      console.log("Verification result:", result)
-
-      if (result.status === "complete") {
-        console.log("Email verification complete, waiting for session...")
-        
-        // Force a complete sign-in to ensure the session is properly established
-        if (result.createdSessionId) {
-          await setActive({ session: result.createdSessionId })
-        }
-
-        // Wait for the session to be fully established
-        const { token, userId: sessionUserId } = await waitForSession()
-
-        const clerkId = sessionUserId || result.createdUserId || signUp.createdUserId
-
-        if (!clerkId) {
-          throw new Error("No user ID found after verification")
-        }
-
-        console.log("Session established, creating user in database with ID:", clerkId)
-
-        // Create user in your database
-        await createUserInDatabase(token, clerkId, {
-          username,
-          email: emailAddress,
-        })
-
-        alert("Signup successful!")
-        handleOnboard()
-      } else {
-        console.error("Verification incomplete:", result)
-        alert("Verification incomplete. Please try again.")
-      }
-    } catch (err) {
-      console.error("Verification error:", err)
-
-      if (err.message.includes("Session not established")) {
-        alert("There was an issue establishing your session. Please try signing in manually.")
-        navigate_to("/signIn")
-      } else if (err.errors && err.errors.length > 0) {
-        alert(err.errors[0].message)
-      } else if (err.message) {
-        alert(err.message)
-      } else {
-        alert("Verification failed. Please try again.")
-      }
-    } finally {
-      setIsVerifying(false)
-    }
+const handleVerify = async () => {
+  if (!isLoaded || !verificationCode.trim()) {
+    alert("Please enter the verification code");
+    return;
   }
+
+  setIsVerifying(true);
+
+  try {
+    console.log("Starting email verification...");
+
+    const result = await signUp.attemptEmailAddressVerification({
+      code: verificationCode,
+    });
+
+    console.log("Verification result:", result);
+
+    if (result.status === "complete") {
+      // Set the session directly
+      await setActive({ session: result.createdSessionId });
+
+      // Get token and Clerk user ID
+      const token = await getToken();
+      const clerkId = result.createdUserId;
+
+      if (!token || !clerkId) {
+        throw new Error("Session was set but no token or user ID found.");
+      }
+
+      // Send to your backend
+      await createUserInDatabase(token, clerkId, {
+        username,
+        email: emailAddress,
+      });
+
+      alert("Signup successful!");
+      handleOnboard();
+    } else {
+      console.error("Verification incomplete:", result);
+      alert("Verification incomplete. Please try again.");
+    }
+  } catch (err) {
+    console.error("Verification error:", err);
+
+    if (err.errors?.length > 0) {
+      alert(err.errors[0].message);
+    } else if (err.message) {
+      alert(err.message);
+    } else {
+      alert("Verification failed. Please try again.");
+    }
+  } finally {
+    setIsVerifying(false);
+  }
+};
+
 
   const handleOAuth = async (provider) => {
     try {

@@ -5,10 +5,10 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 // Create a new chat for a user
-router.post('/chats', async (req, res) => {
+router.post('/', async (req, res) => {
   const clerkUserId = req.auth.userId;
 
-  if (!clerkUserId) {
+  if (!clerkUserId) { 
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
