@@ -17,8 +17,8 @@ router.post('/', async (req, res) => {
     const user = await findOrCreateUser(clerkUserId, { username, email });
     res.status(201).json(user);
   } catch (error) {
-    console.error('Error creating/finding user:', error);
-    res.status(500).json({ error: 'Failed to create or find user' });
+    console.error('Error creating/finding user :', error);
+    res.status(500).json({ error: 'Failed to create or find user ' });
   }
 });
 
