@@ -26,6 +26,8 @@ app.use(ClerkExpressWithAuth());
 const userRoutes = require('./routes/users.cjs');
 app.use('/users', userRoutes);
 
+
+
 const chatRoutes = require('./routes/chats.cjs');
 app.use('/chats', chatRoutes);
 

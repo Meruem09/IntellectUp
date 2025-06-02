@@ -200,6 +200,7 @@ const handleVerify = async () => {
         username,
         email: emailAddress,
       });
+      
 
       alert("Signup successful!");
       handleOnboard();

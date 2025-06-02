@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import {useApiWithToken } from '../../../server/routes/api.cjs';
 
 export default function ChatWindow() {
+  const api = useApiWithToken();
   const [messages, setMessages] = useState([]);
   const [prompt, setPrompt] = useState('');
   const [chatId, setChatId] = useState(null);
@@ -10,7 +12,7 @@ export default function ChatWindow() {
   useEffect(() => {
     const createChat = async () => {
       try {
-        const res = await axios.post('http://localhost:3001/chats', {}); // Clerk auth is assumed
+        const res = await api.post('/chats', {}); // Clerk auth is assumed
         setChatId(res.data.id); // Chat ID from backend
       } catch (err) {
         console.error('Failed to create chat:', err);
@@ -32,7 +34,7 @@ export default function ChatWindow() {
     setPrompt('');
 
     try {
-      const res = await axios.post('http://localhost:3001/gemini', {
+      const res = await api.post('/gemini', {
         chatId,
         prompt,
       });
