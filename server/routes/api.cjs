@@ -1,5 +1,6 @@
 // src/api.js
 import axios from "axios";
+import { useAuth } from "@clerk/clerk-react";
 const api = axios.create({
   baseURL: "http://localhost:3001",
 });
