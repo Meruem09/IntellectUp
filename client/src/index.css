@@ -121,3 +121,37 @@
     @apply bg-background text-foreground;
   }
 }
+
+
+.header2 {
+  background-color: rgb(0, 0, 0);
+  color: #ffffff;
+  height: auto;
+  max-width: 1500px;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 0px 10px;
+  border-bottom: solid aqua 1px;
+}
+
+.d1, .logo{
+  background-color: black;
+  gap: 10px;
+}
+.d1{
+  display: flex;
+}
+
+.links{
+    background-color: black;
+    display: flex;
+    justify-content: space-between;
+    gap: 50px;
+    margin-right: 50%;
+}
+
+.login{
+    background-color: black;
+}

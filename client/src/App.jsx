@@ -6,12 +6,14 @@ import Main from './components/Main';
 import SignIn from './components/SignIn';
 import Onboarding from './components/Onboarding';
 import ChatWindow from './components/ChatWindow';
+import Header from './components/Header';
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <> 
+      <Header/>
       <Router>
           <Routes>
             <Route path="/" element={<Form/>}></Route>
@@ -19,6 +21,7 @@ function App() {
             <Route path="/main" element={<Main/>}></Route>
             <Route path="/board" element={<Onboarding/>}></Route>
             <Route path="/chat" element={<ChatWindow/>}></Route>
+            {/* <Route path="/header" element={<Header/>}></Route> */}
 
           </Routes>
         </Router>
