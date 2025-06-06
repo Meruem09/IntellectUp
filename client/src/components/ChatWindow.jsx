@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from "@clerk/clerk-react";
 import api, { setAuthToken } from '../../../server/routes/api.cjs';
 import Header from './Header';
+import attachIcon from '../assets/attach.png';
 
 export default function ChatWindow() {
   const { getToken } = useAuth();
@@ -173,18 +174,17 @@ export default function ChatWindow() {
             placeholder="Type your message..."
             disabled={!chatId}
           />
-          <button
+          <button>
+            <img src={attachIcon} className='w-6 h-6 cursor-pointer'/>
+          </button>
+                    <button
             onClick={handleSend}
             disabled={!chatId || !prompt.trim()}
             className="bg-blue-600  text-white px-4 py-2 rounded-xl disabled:bg-gray-400"
           >
             Send
           </button>
-          <button
-            
-          >
-            <img src="/attach.png"/>
-          </button>
+
         </div>
       </div>
     </div>

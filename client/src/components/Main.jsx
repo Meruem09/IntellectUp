@@ -20,10 +20,11 @@ const Main = () => {
 
     <>
       <Split
-        className="flex h-screen bg-white"
+        className="flex h-[10%] "
+        gutterClassName="custom-gutter"
         sizes={[50, 50]}
         minSize={[550,300]}
-        gutterSize={2}
+        gutterSize={1}
         direction="horizontal"
       >
         <div>
@@ -31,12 +32,12 @@ const Main = () => {
         </div>
         <div>
           <div className="min-h-screen bg-black text-white">
-           <div className="flex space-x-6 border-b border-gray-700 px-6 py-4">
+           <div className="flex space-x-6  border-gray-700 px-6 py-4">
             {tabs.map((tab) => (
               <button
                 key={tab.name}
                 className={`text-lg font-medium ${
-                  activeTab === tab.name ? "text-blue-400 border-b-2 border-blue-400" : "text-gray-400"
+                  activeTab === tab.name ? "text-blue-400  border-blue-400" : "text-gray-400"
                 }`}
                 onClick={() => setActiveTab(tab.name)}
               >
@@ -45,7 +46,7 @@ const Main = () => {
             ))}
            </div>
 
-            <div className="p-6">
+            <div className="p-6 h-screen">
               {tabs.find((tab) => tab.name === activeTab)?.Component}
             </div>
           </div>
