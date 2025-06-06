@@ -12,6 +12,7 @@ const Onboarding = () => {
   });
 
   const navigate_to = useNavigate();
+  
   const handleMain = () => {
     navigate_to('/main');
   }
@@ -29,7 +30,7 @@ const Onboarding = () => {
       setStep((prev) => prev + 1);
     } else {
       console.log("Onboarding Complete:", formData);
-      handleChat();
+      handleMain();
       // Redirect or save to DB
     }
   };

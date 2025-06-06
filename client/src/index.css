@@ -155,3 +155,9 @@
 .buttons{
     background-color: black;
 }
+
+.gutter {
+  background-color: #ffffff;
+  cursor:e-resize;
+  width: 20px;
+}

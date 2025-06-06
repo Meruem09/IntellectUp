@@ -151,7 +151,7 @@ export default function ChatWindow() {
   return (
     <div>
       {/* <Header/> */}
-      <div className="max-w-2xl mx-auto mt-10 p-1 bg-white border-1 rounded-sm shadow-lg h-[80vh] flex flex-col">        
+      <div className="max-w-2xl mx-auto mt-10 p-1 shadow-lg h-[80vh] flex flex-col">        
         <div className="flex-1 p-2 overflow-y-auto space-y-4 mb-4">
           {messages.map((msg, idx) => (
             <div
@@ -164,21 +164,26 @@ export default function ChatWindow() {
             </div>
           ))}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 p-2 border border-blue-900 rounded-3xl">
           <input
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="flex-1 border border-gray-300 rounded-xl p-2"
+            className="flex-1 rounded-3xl p-2"
             placeholder="Type your message..."
             disabled={!chatId}
           />
           <button
             onClick={handleSend}
             disabled={!chatId || !prompt.trim()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-xl disabled:bg-gray-400"
+            className="bg-blue-600  text-white px-4 py-2 rounded-xl disabled:bg-gray-400"
           >
             Send
+          </button>
+          <button
+            
+          >
+            <img src="/attach.png"/>
           </button>
         </div>
       </div>

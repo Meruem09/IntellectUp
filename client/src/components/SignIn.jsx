@@ -72,7 +72,7 @@ const SignIn = () => {
         <h2 className="text-2xl font-bold mb-1">Welcome Back 👋</h2>
         <br />
 
-        <form onSubmit={handleChat} className="space-y-4">
+        <form onSubmit={handleMain} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Email address</label>
             <input
