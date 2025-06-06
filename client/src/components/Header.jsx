@@ -1,7 +1,5 @@
-import { UserButton, useUser } from "@clerk/clerk-react";
-
 const Header = () => {
-    const {isSignedIn} = useUser();
+
 
     return ( 
         <div className="header2">
@@ -13,18 +11,18 @@ const Header = () => {
                 <a href=""> Home</a>
                 <a href=""> New Chat</a>         
             </div>
-                <div className="buttons">
-                {isSignedIn ? (
-                    <UserButton/>
-                ) : (
-                    <>
-                    <button className="login_btn1">Login</button>
-                    </>
-                    
-                )}
+            <div className="login">
+                <button>Login</button>
+
+
+
+
+
+
+
             </div>
         </div>
      );
 }
- 
+
 export default Header;
