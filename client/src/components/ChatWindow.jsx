@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { useAuth } from "@clerk/clerk-react";
 import api, { setAuthToken } from '../../../server/routes/api.cjs';
 import Header from './Header';
@@ -11,6 +11,9 @@ export default function ChatWindow() {
   const [chatId, setChatId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [file, setFile] = useState(null);
+  const [progress, setProgress] = useState(null);
+  const [response, setResponse] = useState(null);
 
   // Set auth token when component mounts
   useEffect(() => {
@@ -118,6 +121,24 @@ export default function ChatWindow() {
     }
   };
 
+  // const handleFileChange = (e) =>{
+  //   setFile(e.target.file[0])
+  // }
+
+  // const handleUpload = async () => {
+  //   const formData = new FormData();
+  //   formData.append("file", file);
+
+  //   const res = await axios.post("http://localhost:3001/gemini", formData, {
+  //     headers: { "Content-Type": "multipart/form-data" },
+  //     onUploadProgress: (event) => {
+  //       const percent = Math.round((event.loaded * 100) / event.total);
+  //       setProgress(percent);
+  //     }
+  //   });
+  // }
+
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -175,9 +196,9 @@ export default function ChatWindow() {
             disabled={!chatId}
           />
           <button>
-            <img src={attachIcon} className='w-6 h-6 cursor-pointer'/>
+            <img src={attachIcon}  className='w-6 h-6 cursor-pointer'/>
           </button>
-                    <button
+          <button
             onClick={handleSend}
             disabled={!chatId || !prompt.trim()}
             className="bg-blue-600  text-white px-4 py-2 rounded-xl disabled:bg-gray-400"

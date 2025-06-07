@@ -21,7 +21,7 @@ const Main = () => {
     <>
       <Split
         className="flex h-[10%] "
-        gutterClassName="custom-gutter"
+        gutterclassname="custom-gutter"
         sizes={[50, 50]}
         minSize={[550,300]}
         gutterSize={1}
