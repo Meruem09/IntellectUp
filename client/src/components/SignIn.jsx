@@ -72,7 +72,7 @@ const SignIn = () => {
         <h2 className="text-2xl font-bold mb-1">Welcome Back 👋</h2>
         <br />
 
-        <form onSubmit={handleMain} className="space-y-4">
+        <form onSubmit={handleSignIn} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Email address</label>
             <input
@@ -101,7 +101,7 @@ const SignIn = () => {
 
           <button
             type="submit"
-            onSubmit={handleChat}
+            onSubmit={handleSignIn}
             className="w-full mt-4 bg-gray-950 hover:bg-blue-900 border border-gray-600 transition-colors text-white font-semibold py-2 rounded-lg"
           >
             Sign In →

@@ -4,10 +4,11 @@ const express = require('express');
 const dotenv = require('dotenv');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
+
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const upload = multer({dest: 'uploads/'})
+
 
 // Clerk middleware is assumed applied globally in app.js/server.js
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
@@ -19,7 +20,7 @@ const userInfo = {
   explanationStyle: 'short and in points user friendly and with some emojis',
 };
 
-router.post('/', upload.single('file'), async (req, res) => {
+router.post('/', async (req, res) => {
   const clerkUserId = req.auth?.userId; // 👈 get Clerk ID
   const { chatId, prompt } = req.body;
 
@@ -49,16 +50,12 @@ router.post('/', upload.single('file'), async (req, res) => {
     // 🤖 3. Get Gemini response
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
 
-    const filepath = req.file.path;
-    const filedata = fs.readFileSync(filepath, 'utf-8');
-
-
     const systemPrompt = `Your name is Gemini. You're assisting ${userInfo.name} from ${userInfo.school}.
                           Please always respond in ${userInfo.language} and give explanations that are ${userInfo.explanationStyle}.`;
 
     const finalPrompt = `${systemPrompt}\n\nUser prompt: ${prompt}`;
 
-    const result = await model.generateContent([filedata, { text: finalPrompt }]);
+    const result = await model.generateContent([{ text: finalPrompt }]);
     const aiResponse = result.response.text();
 
     // 💾 4. Store AI message
