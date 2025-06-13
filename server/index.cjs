@@ -2,7 +2,7 @@
 const express = require('express');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
-const { ClerkExpressWithAuth } = require('@clerk/clerk-sdk-node');
+const { ClerkClient, ClerkExpressWithAuth } = require('@clerk/express');
 const findOrCreateUser = require('./utils/middleware.cjs');
 
 require('dotenv').config();
@@ -18,7 +18,8 @@ app.use(cors({
 
 
 // Apply middleware globally
-app.use(ClerkExpressWithAuth());
+// app.use(ClerkExpressWithAuth());
+// app.use(findOrCreateUser());
 
 
 

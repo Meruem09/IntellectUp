@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
-const { users } = require('@clerk/clerk-sdk-node');
+const { users } = require('@clerk/express');
 
 const prisma = new PrismaClient();
 
